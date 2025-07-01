@@ -25,14 +25,22 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd)/app" >> $GITHUB_ENV  # 移到执行依赖安装后
+        run: echo "PYTHONPATH=$(pwd)/app" >> $GITHUB_ENV
+
+      - name: Create .coveragerc
+        run: |
+          echo "[run]" > .coveragerc
+          echo "omit =" >> .coveragerc
+          echo "    main.py" >> .coveragerc 
+          echo "    tests/*" >> .coveragerc
+          echo "    app/ext.py" >> .coveragerc 
 
       - name: Run unit tests with coverage
         id: run-tests
         continue-on-error: true
         run: |
           pip install coverage
-          coverage run --omit='tests/*' -m unittest discover tests/
+          coverage run -m unittest discover tests/
           coverage xml  # Generate XML report for upload
 
       - name: Upload coverage report
