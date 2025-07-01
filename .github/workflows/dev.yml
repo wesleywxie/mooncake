@@ -7,7 +7,7 @@ on:
       - dev
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,11 +24,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)/app" >> $GITHUB_ENV  # 移到执行依赖安装后
+
       - name: Run unit tests with coverage
         id: run-tests
         continue-on-error: true
         run: |
-          echo "PYTHONPATH=$(pwd)/app" >> $GITHUB_ENV
           pip install coverage
           coverage run -m unittest discover tests/
           coverage xml  # Generate XML report for upload
