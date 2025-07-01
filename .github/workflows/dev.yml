@@ -37,8 +37,9 @@ jobs:
 
       - name: Upload coverage report
         if: steps.run-tests.outcome == 'success' || steps.run-tests.outcome == 'failure'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
 
       - name: Notify on test failure
