@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests with coverage
+        id: run-tests
+        continue-on-error: true
+        run: |
+          export PYTHONPATH=${GITHUB_WORKSPACE}
+          pip install coverage
+          coverage run -m unittest discover tests/
+          coverage xml  # Generate XML report for upload
+
+      - name: Upload coverage report
+        if: steps.run-tests.outcome == 'success' || steps.run-tests.outcome == 'failure'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+
+      - name: Notify on test failure
+        if: steps.run-tests.outcome == 'failure'
+        run: |
+          echo "🚨 Unit tests failed! Check the logs for details."
+          exit 1
