@@ -13,7 +13,7 @@ class TestDataExtractor(unittest.TestCase):
         TC04: 测试空输入
         验证返回空列表
         """
-        result = self.extractor.extract_movies(self.base_url, "")
+        result = self.extractor.extract_movie_list_item(self.base_url, "")
         self.assertEqual(result, [])
 
     def test_extract_movies_no_items(self):
@@ -22,7 +22,7 @@ class TestDataExtractor(unittest.TestCase):
         验证返回空列表
         """
         html = '<div><p>No items here</p></div>'
-        result = self.extractor.extract_movies(self.base_url, html)
+        result = self.extractor.extract_movie_list_item(self.base_url, html)
         self.assertEqual(result, [])
 
     def test_extract_movies_with_valid_data(self):
@@ -64,7 +64,7 @@ class TestDataExtractor(unittest.TestCase):
                 'link': 'https://example.com/v/yBc2CC',
             }
         ]
-        result = self.extractor.extract_movies("https://example.com", html)
+        result = self.extractor.extract_movie_list_item("https://example.com", html)
         self.assertEqual(result, expected_result)
 
     def test_extract_movies_missing_score_or_meta(self):
@@ -88,7 +88,7 @@ class TestDataExtractor(unittest.TestCase):
                 'link': 'https://example.com/v/zZzZZz',
             }
         ]
-        result = self.extractor.extract_movies("https://example.com", html)
+        result = self.extractor.extract_movie_list_item("https://example.com", html)
         self.assertEqual(result, expected_result)
 
     def test_extract_movies_missing_cover_or_link(self):
@@ -110,5 +110,5 @@ class TestDataExtractor(unittest.TestCase):
                 'link': None,
             }
         ]
-        result = self.extractor.extract_movies("https://example.com", html)
+        result = self.extractor.extract_movie_list_item("https://example.com", html)
         self.assertEqual(result, expected_result)

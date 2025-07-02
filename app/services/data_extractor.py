@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class DataExtractor:
-    def extract_movies(self, base_url, movie_data):
+    def extract_movie_list_item(self, base_url, movie_data):
         soup = BeautifulSoup(movie_data, 'lxml')
         movies = []
         for item in soup.select('.item'):

@@ -21,7 +21,7 @@ def main():
 
     html_content = result.get("result").get("html")
     extractor = DataExtractor()
-    movies_json = extractor.extract_movies(base_url=url, movie_data=html_content)
+    movies_json = extractor.extract_movie_list_item(base_url=url, movie_data=html_content)
     logger.info(movies_json)
 
 
