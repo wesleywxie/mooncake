@@ -43,6 +43,26 @@ jobs:
           coverage run -m unittest discover tests/
           coverage xml  # Generate XML report for upload
 
+      - name: Coverage summary
+        if: steps.run-tests.outcome == 'success' || steps.run-tests.outcome == 'failure'
+        run: |
+          coverage report -m | tee coverage.txt
+          {
+            echo '### Coverage Report';
+            echo '```';
+            coverage report -m;
+            echo '```';
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage artifacts
+        if: steps.run-tests.outcome == 'success' || steps.run-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            coverage.txt
+
       - name: Upload coverage report
         if: steps.run-tests.outcome == 'success' || steps.run-tests.outcome == 'failure'
         uses: codecov/codecov-action@v5
