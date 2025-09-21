@@ -1,5 +1,16 @@
+from __future__ import annotations
+
+
 class MovieListItem:
-    def __init__(self, id: str=None, title: str=None, cover: str=None, link: str=None, score: str=None, meta: str=None):
+    def __init__(
+        self,
+        id: str | None = None,
+        title: str | None = None,
+        cover: str | None = None,
+        link: str | None = None,
+        score: str | None = None,
+        meta: str | None = None,
+    ):
         self.id = id
         self.title = title
         self.cover = cover

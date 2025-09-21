@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
@@ -16,14 +18,14 @@ class DataExtractor:
     into small helpers for clarity and easier maintenance.
     """
 
-    def extract_movie_list_item(self, base_url: str, movie_data: str) -> List[MovieListItem]:
+    def extract_movie_list_item(self, base_url: str, movie_data: str) -> list[MovieListItem]:
         """Extract a list of MovieListItem from a movie listing HTML snippet.
 
         - Safely handles missing nodes by returning None for absent fields.
         - Joins relative links against the provided base URL.
         """
         soup = BeautifulSoup(movie_data, "lxml")
-        movies: List[MovieListItem] = []
+        movies: list[MovieListItem] = []
 
         for item in soup.select(".item"):
             movie_id = self._get_text(item.select_one(".video-title strong"))
@@ -48,11 +50,11 @@ class DataExtractor:
 
         return movies
 
-    def extract_movie_details(self, movie_detail_data: str) -> Dict[str, Any]:
+    def extract_movie_details(self, movie_detail_data: str) -> dict[str, Any]:
         """Extract a structured dictionary of movie details from HTML."""
         soup = BeautifulSoup(movie_detail_data, "lxml")
 
-        video_data: Dict[str, Any] = {
+        video_data: dict[str, Any] = {
             "title": {"id": None, "current_title": None},
             "meta": {
                 "release_date": None,
@@ -83,12 +85,12 @@ class DataExtractor:
     # -------------------------
 
     @staticmethod
-    def _get_text(node: Optional[Tag]) -> Optional[str]:
+    def _get_text(node: Tag | None) -> str | None:
         """Return stripped text of node or None if node is falsy."""
         return node.get_text(strip=True) if node else None
 
     @staticmethod
-    def _get_attr(node: Optional[Tag], attr: str) -> Optional[str]:
+    def _get_attr(node: Tag | None, attr: str) -> str | None:
         """Return attribute value or None if node/attribute absent."""
         if node and attr in node.attrs:
             value = node.attrs.get(attr)
@@ -97,7 +99,7 @@ class DataExtractor:
             return str(value)
         return None
 
-    def _parse_title(self, soup: BeautifulSoup, out: Dict[str, Any]) -> None:
+    def _parse_title(self, soup: BeautifulSoup, out: dict[str, Any]) -> None:
         title_div = soup.find("h2", class_="title is-4")
         if not title_div:
             return
@@ -107,7 +109,7 @@ class DataExtractor:
         out["title"]["id"] = self._get_text(id_tag)
         out["title"]["current_title"] = self._get_text(current_title_tag)
 
-    def _parse_meta_panel(self, soup: BeautifulSoup, out: Dict[str, Any]) -> None:
+    def _parse_meta_panel(self, soup: BeautifulSoup, out: dict[str, Any]) -> None:
         meta_panel = soup.find("div", class_="video-meta-panel")
         if not meta_panel:
             return
@@ -151,7 +153,7 @@ class DataExtractor:
                     gender = "female" if actor.find("strong", class_="symbol female") else "male"
                     out["actors"].append({"name": name, "gender": gender})
 
-    def _parse_cover_and_previews(self, soup: BeautifulSoup, out: Dict[str, Any]) -> None:
+    def _parse_cover_and_previews(self, soup: BeautifulSoup, out: dict[str, Any]) -> None:
         cover_image_div = soup.find("div", class_="column video-cover")
         if cover_image_div:
             cover_link = cover_image_div.find("a")
@@ -165,7 +167,7 @@ class DataExtractor:
                 if href:
                     out["preview_images"].append(href)
 
-    def _parse_magnet_links(self, soup: BeautifulSoup, out: Dict[str, Any]) -> None:
+    def _parse_magnet_links(self, soup: BeautifulSoup, out: dict[str, Any]) -> None:
         magnet_links_section = soup.find("div", id="magnets")
         if not magnet_links_section:
             return
@@ -187,7 +189,7 @@ class DataExtractor:
             })
 
     @staticmethod
-    def _parse_rating_and_reviews(text: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    def _parse_rating_and_reviews(text: str | None) -> tuple[str | None, str | None]:
         """Split rating text like "⭐️⭐️⭐️⭐️⭐️, 100 reviews".
 
         Returns (rating_str, users_reviewed_str). If parsing fails, returns
@@ -197,7 +199,7 @@ class DataExtractor:
             return None, None
         parts = [p.strip() for p in text.split(",")]
         rating = parts[0] if parts else None
-        users: Optional[str] = None
+        users: str | None = None
         if len(parts) > 1:
             # Expect formats like "100 reviews"; take the numeric token.
             tokens = parts[1].split()

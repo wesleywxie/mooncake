@@ -3,53 +3,57 @@ from app.services.data_extractor import DataExtractor
 from app.models.movie import MovieListItem
 
 
+def _movie_item_html(href: str | None, cover: str | None, meta: str | None, title: str | None, score: str | None) -> str:
+    parts = ["<div class=\"item\">", "<a class=\"box\"{}>".format(f" href=\"{href}\"" if href else "")]
+    if cover:
+        parts.append(f"<img src=\"{cover}\" class=\"cover\">")
+    if meta is not None:
+        parts.append(f"<div class=\"meta\">{meta}</div>")
+    if title is not None:
+        parts.append(f"<div class=\"video-title\">{title}</div>")
+    if score is not None:
+        parts.append(f"<div class=\"score\"><span class=\"value\">{score}</span></div>")
+    parts.extend(["</a>", "</div>"])
+    return "\n".join(parts)
+
+
 class TestDataExtractor(unittest.TestCase):
     def setUp(self):
-        """初始化测试环境"""
+        """Create a fresh extractor and base URL for each test."""
         self.extractor = DataExtractor()
         self.base_url = "https://example.com"
 
-    def test_extract_movies_empty_input(self):
-        """
-        TC04: 测试空输入
-        验证返回空列表
-        """
+    # ----- Movie list extraction -----
+    def test_extract_movie_list_empty_input_returns_empty_list(self):
+        # Act
         result = self.extractor.extract_movie_list_item(self.base_url, "")
+        # Assert
         self.assertEqual(result, [])
 
-    def test_extract_movies_no_items(self):
-        """
-        TC05: 测试 HTML 中无 .item 元素
-        验证返回空列表
-        """
+    def test_extract_movie_list_no_items(self):
         html = '<div><p>No items here</p></div>'
         result = self.extractor.extract_movie_list_item(self.base_url, html)
         self.assertEqual(result, [])
 
-    def test_extract_movies_with_valid_data(self):
-        """
-        TC01: 测试正常 HTML 数据提取
-        验证所有字段都能正确提取并拼接 URL
-        """
-        html = '''
-        <div class="item">
-            <a href="/v/xAg1BB" class="box" title="Movie Title 1 - Actress Name">
-                <img src="https://example.com/images/v/xAg1BB.jpg" class="cover">
-                <div class="meta">发布时间: 2021-11-12</div>
-                <div class="video-title">Movie Title 1</div>
-                <div class="score"><span class="value">9.5</span></div>
-            </a>
-        </div>
-        <div class="item">
-            <a href="/v/yBc2CC" class="box" title="Another Movie - Actress Name">
-                <img src="https://example.com/images/v/yBc2CC.jpg" class="cover">
-                <div class="meta">发布时间: 2022-03-15</div>
-                <div class="video-title">Another Movie Title</div>
-                <div class="score"><span class="value">8.7</span></div>
-            </a>
-        </div>
-        '''
-        expected_result = [
+    def test_extract_movie_list_with_valid_data(self):
+        # Arrange: build two items
+        html = "\n".join([
+            _movie_item_html(
+                href="/v/xAg1BB",
+                cover="https://example.com/images/v/xAg1BB.jpg",
+                meta="发布时间: 2021-11-12",
+                title="Movie Title 1",
+                score="9.5",
+            ),
+            _movie_item_html(
+                href="/v/yBc2CC",
+                cover="https://example.com/images/v/yBc2CC.jpg",
+                meta="发布时间: 2022-03-15",
+                title="Another Movie Title",
+                score="8.7",
+            ),
+        ])
+        expected = [
             MovieListItem(
                 title='Movie Title 1',
                 score='9.5',
@@ -65,55 +69,40 @@ class TestDataExtractor(unittest.TestCase):
                 link='https://example.com/v/yBc2CC'
             ),
         ]
-        result = self.extractor.extract_movie_list_item("https://example.com", html)
-        self.assertEqual(result, expected_result)
+        # Act
+        result = self.extractor.extract_movie_list_item(self.base_url, html)
+        # Assert
+        self.assertEqual(result, expected)
 
-    def test_extract_movies_missing_score_or_meta(self):
-        """
-        TC02: 测试部分字段缺失的情况
-        验证即使某些字段缺失也能继续解析
-        """
-        html = '''
-        <div class="item">
-            <a href="/v/zZzZZz" class="box" title="Untitled Movie">
-                <img src="https://example.com/images/movie1.jpg" class="cover">
-            </a>
-        </div>
-        '''
-        expected_result = [MovieListItem(
+    def test_extract_movie_list_handles_missing_fields(self):
+        # Arrange
+        html = _movie_item_html(
+            href="/v/zZzZZz",
+            cover="https://example.com/images/movie1.jpg",
+            meta=None,
+            title=None,
+            score=None,
+        )
+        expected = [MovieListItem(
             title=None,
             score=None,
             meta=None,
             cover='https://example.com/images/movie1.jpg',
             link='https://example.com/v/zZzZZz',
         )]
-        result = self.extractor.extract_movie_list_item("https://example.com", html)
-        self.assertEqual(result, expected_result)
+        # Act
+        result = self.extractor.extract_movie_list_item(self.base_url, html)
+        # Assert
+        self.assertEqual(result, expected)
 
-    def test_extract_movies_missing_cover_or_link(self):
-        """
-        TC03: 测试缺少 cover img 或 a 标签的情况
-        验证不会抛出异常，对应字段为 None
-        """
-        html = '''
-        <div class="item">
-            <div class="video-title">Movie Without Image or Link</div>
-        </div>
-        '''
-        expected_result = [
-            MovieListItem(
-                title='Movie Without Image or Link',
-                score=None,
-                meta=None,
-                cover=None,
-                link=None,
-            )
-        ]
-        result = self.extractor.extract_movie_list_item("https://example.com", html)
-        self.assertEqual(result, expected_result)
+    def test_extract_movie_list_without_cover_or_link(self):
+        html = '<div class="item"><div class="video-title">Movie Without Image or Link</div></div>'
+        expected = [MovieListItem(title='Movie Without Image or Link', score=None, meta=None, cover=None, link=None)]
+        result = self.extractor.extract_movie_list_item(self.base_url, html)
+        self.assertEqual(result, expected)
 
+    # ----- Movie details extraction -----
     def test_extract_full_movie_details(self):
-        """TC01: 完整数据提取"""
         html = '''
         <h2 class="title is-4">
             <strong>ID123</strong>
@@ -157,14 +146,12 @@ class TestDataExtractor(unittest.TestCase):
         self.assertEqual(len(result["magnet_links"]), 1)
 
     def test_missing_title(self):
-        """TC02: 缺失标题部分"""
         html = '<div class="video-meta-panel"></div>'
         result = self.extractor.extract_movie_details(html)
         self.assertIsNone(result["title"]["id"])
         self.assertIsNone(result["title"]["current_title"])
 
     def test_missing_meta_panel(self):
-        """TC03: 缺失元数据面板"""
         html = '<h2 class="title is-4"><strong>ID123</strong></h2>'
         result = self.extractor.extract_movie_details(html)
         self.assertIsNone(result["meta"]["release_date"])
@@ -177,34 +164,21 @@ class TestDataExtractor(unittest.TestCase):
         self.assertEqual(result["actors"], [])
 
     def test_missing_cover_image(self):
-        """TC05: 缺失封面图"""
-        html = '''
-        <h2 class="title is-4"><strong>ID123</strong></h2>
-        <div class="video-meta-panel"></div>
-        '''
+        html = '<h2 class="title is-4"><strong>ID123</strong></h2><div class="video-meta-panel"></div>'
         result = self.extractor.extract_movie_details(html)
         self.assertIsNone(result["cover_image"])
 
     def test_missing_preview_images(self):
-        """TC06: 缺失预览图"""
-        html = '''
-        <h2 class="title is-4"><strong>ID123</strong></h2>
-        <div class="video-meta-panel"></div>
-        '''
+        html = '<h2 class="title is-4"><strong>ID123</strong></h2><div class="video-meta-panel"></div>'
         result = self.extractor.extract_movie_details(html)
         self.assertEqual(result["preview_images"], [])
 
     def test_missing_magnet_links(self):
-        """TC07: 缺失磁力链接"""
-        html = '''
-        <h2 class="title is-4"><strong>ID123</strong></h2>
-        <div class="video-meta-panel"></div>
-        '''
+        html = '<h2 class="title is-4"><strong>ID123</strong></h2><div class="video-meta-panel"></div>'
         result = self.extractor.extract_movie_details(html)
         self.assertEqual(result["magnet_links"], [])
 
     def test_multiple_magnet_links(self):
-        """TC08: 多个磁力链接"""
         html = '''
         <div id="magnets">
             <div class="item">
@@ -225,7 +199,6 @@ class TestDataExtractor(unittest.TestCase):
         self.assertEqual(result["magnet_links"][1]["link"], "magnet:?xt=urn:btih:def456")
 
     def test_special_rating_format(self):
-        """TC09: 特殊评分格式"""
         html = '''
         <div class="video-meta-panel">
             <div class="panel-block">
@@ -239,7 +212,6 @@ class TestDataExtractor(unittest.TestCase):
         self.assertEqual(result["meta"]["users_reviewed"], "50")
 
     def test_empty_input(self):
-        """TC10: 空输入"""
         html = ''
         result = self.extractor.extract_movie_details(html)
         self.assertIsNone(result["title"]["id"])
@@ -259,3 +231,4 @@ class TestDataExtractor(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
