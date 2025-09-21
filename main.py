@@ -1,3 +1,4 @@
+import json
 import logging
 
 from app.ext import CONFIG, CRAWLER
@@ -23,6 +24,8 @@ def main():
     extractor = DataExtractor()
     movie_list = extractor.extract_movie_list_item(base_url=url, movie_data=html_content)
 
+    logger.info(f"Found {len(movie_list)} movies, processing...")
+
     for movie_list_item in movie_list:
         html_content = CRAWLER.scrape(
             url=movie_list_item.link,
@@ -34,7 +37,7 @@ def main():
             },
         ).get("result").get("html")
         movie_details = extractor.extract_movie_details(html_content)
-        logger.debug(movie_details)
+        logger.info(json.dumps(movie_details, indent=4))
 
 
 

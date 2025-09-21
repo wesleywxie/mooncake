@@ -1,5 +1,5 @@
 from app.config import Config
-from services.water_crawler import WaterCrawler
+from app.services.water_crawler import WaterCrawler
 
 CONFIG = Config()
 
