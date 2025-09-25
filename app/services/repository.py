@@ -107,6 +107,7 @@ class MovieDetailsRepository:
         for tag_val, obj in list(current.items()):
             if tag_val not in desired:
                 self.session.delete(obj)
+                movie.tags.remove(obj)
         # Add
         for tag_val in desired:
             if tag_val not in current:

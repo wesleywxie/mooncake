@@ -17,7 +17,7 @@ class TestConfigInit(unittest.TestCase):
         self.assertEqual(cfg.WATER_CRAWL_API_KEY, 'sys_key')
         self.assertFalse(cfg.DEBUG)
 
-    @patch.dict('os.environ', {})
+    @patch.dict('os.environ', {}, clear=True)
     @patch('app.config.dotenv_values', return_value={'DEBUG': 'TRUE'})
     def test_debug_true_from_env_file(self, mock_dotenv):
         """DEBUG is true when provided as TRUE in .env file."""
@@ -29,16 +29,16 @@ class TestConfigInit(unittest.TestCase):
         self.assertTrue(cfg.DEBUG)
 
     @patch.dict('os.environ', {'DEBUG': 'invalid_value'})
-    def test_invalid_debug_value_defaults_to_false(self):
+    @patch('app.config.dotenv_values', return_value={})
+    def test_invalid_debug_value_defaults_to_false(self, _):
         """Invalid DEBUG values fall back to False (non-debug)."""
         # Act
-        with patch('config.dotenv_values', return_value={}):
-            cfg = Config()
+        cfg = Config()
 
         # Assert
         self.assertFalse(cfg.DEBUG)
 
-    @patch.dict('os.environ', {})
+    @patch.dict('os.environ', {}, clear=True)
     @patch('app.config.dotenv_values', return_value={})
     def test_no_env_vars_uses_defaults(self, mock_dotenv):
         """When no env vars provided, default values are used."""
