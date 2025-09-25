@@ -3,3 +3,5 @@
 .env
 *.db
 examples/**
+**/__pycache__/**
+.pytest_cache
