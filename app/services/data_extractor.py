@@ -18,7 +18,9 @@ class DataExtractor:
     into small helpers for clarity and easier maintenance.
     """
 
-    def extract_movie_list_item(self, base_url: str, movie_data: str) -> list[MovieListItem]:
+    def extract_movie_list_item(
+        self, base_url: str, movie_data: str
+    ) -> list[MovieListItem]:
         """Extract a list of MovieListItem from a movie listing HTML snippet.
 
         - Safely handles missing nodes by returning None for absent fields.
@@ -149,11 +151,19 @@ class DataExtractor:
                         out["tags"].append(text)
             elif key == "Actor(s)":
                 for actor in block.find_all("span", class_="value"):
-                    name = actor.a.get_text(strip=True) if actor and actor.a else "Unknown"
-                    gender = "female" if actor.find("strong", class_="symbol female") else "male"
+                    name = (
+                        actor.a.get_text(strip=True) if actor and actor.a else "Unknown"
+                    )
+                    gender = (
+                        "female"
+                        if actor.find("strong", class_="symbol female")
+                        else "male"
+                    )
                     out["actors"].append({"name": name, "gender": gender})
 
-    def _parse_cover_and_previews(self, soup: BeautifulSoup, out: dict[str, Any]) -> None:
+    def _parse_cover_and_previews(
+        self, soup: BeautifulSoup, out: dict[str, Any]
+    ) -> None:
         cover_image_div = soup.find("div", class_="column video-cover")
         if cover_image_div:
             cover_link = cover_image_div.find("a")
@@ -182,11 +192,13 @@ class DataExtractor:
             size_info = self._get_text(size_tag)
 
             # Keep keys consistent with existing behavior
-            out["magnet_links"].append({
-                "name": link_name,
-                "link": link,
-                "size": size_info,
-            })
+            out["magnet_links"].append(
+                {
+                    "name": link_name,
+                    "link": link,
+                    "size": size_info,
+                }
+            )
 
     @staticmethod
     def _parse_rating_and_reviews(text: str | None) -> tuple[str | None, str | None]:

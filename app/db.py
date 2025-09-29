@@ -32,7 +32,9 @@ def get_engine(database_url: str | None = None, echo: bool | None = None) -> Eng
 
 def get_session_maker(engine: Engine | None = None) -> sessionmaker[Session]:
     eng = engine or get_engine()
-    return sessionmaker(bind=eng, autoflush=False, autocommit=False, expire_on_commit=False, future=True)
+    return sessionmaker(
+        bind=eng, autoflush=False, autocommit=False, expire_on_commit=False, future=True
+    )
 
 
 @contextmanager
@@ -50,10 +52,6 @@ def get_session(engine: Engine | None = None) -> Iterator[Session]:
 
 
 def init_db(engine: Engine | None = None) -> None:
-    """Create all tables for registered models.
-
-    Import ORM model modules before calling to ensure they are registered on Base.metadata.
-    """
     # Local import to avoid circulars in model modules
     from app.models.movie_orm import Movie  # noqa: F401 - register model
 

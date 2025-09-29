@@ -24,4 +24,8 @@ class MovieListItem:
         return self.id == other.id
 
     def __repr__(self):
-        return f"MovieListItem(id={self.id}, title={self.title}, score={self.score}, meta={self.meta}, cover={self.cover}, link={self.link})"
+        return (
+            f"MovieListItem(id={self.id}, title={self.title}, "
+            f"score={self.score}, meta={self.meta}, "
+            f"cover={self.cover}, link={self.link})"
+        )
