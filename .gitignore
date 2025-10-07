@@ -4,5 +4,6 @@
 .env
 *.db
 examples/**
+!examples/*.py
 **/__pycache__/**
 .pytest_cache
