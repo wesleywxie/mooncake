@@ -33,6 +33,7 @@ jobs:
           echo "omit =" >> .coveragerc
           echo "    main.py" >> .coveragerc 
           echo "    tests/*" >> .coveragerc
+          echo "    app/config.py" >> .coveragerc 
           echo "    app/ext.py" >> .coveragerc 
 
       - name: Run unit tests with coverage
